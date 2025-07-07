@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,11 +21,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-interface LoginProps {
-  onLogin: () => void;
-}
-
-const Login = ({ onLogin }: LoginProps) => {
+const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [forgotEmail, setForgotEmail] = useState("");
@@ -31,64 +29,61 @@ const Login = ({ onLogin }: LoginProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSendingOTP, setIsSendingOTP] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
-
-  // Reset Step States
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
-
+  const { login } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
-const handleLogin = async (e: React.FormEvent) => {
-  e.preventDefault();
 
-  if (!email || !password) {
-    toast({
-      title: "Error",
-      description: "Please fill in all fields",
-      variant: "destructive",
-    });
-    return;
-  }
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  setIsLoading(true);
-
-  try {
-    const response = await fetch("https://onlinewriting.onrender.com/api/open/users/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok || data.status !== "success") {
-      throw new Error(data.message || "Invalid credentials");
+    if (!email || !password) {
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      });
+      return;
     }
 
-    // ✅ Save in sessionStorage instead of localStorage
-    const { token, userId, fullName, userName } = data.body;
-localStorage.setItem("token", token);
-localStorage.setItem("fullName", fullName);
-localStorage.setItem("userId", userId.toString());
-localStorage.setItem("userName", userName);
+    setIsLoading(true);
 
+    try {
+      const response = await fetch("https://onlinewriting.onrender.com/api/open/users/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-    toast({
-      title: `Welcome ${userName} 👋`,
-      description: "Login successful",
-    });
+      const data = await response.json();
 
-    onLogin(); // Proceed to dashboard or main app
-  } catch (error: any) {
-    toast({
-      title: "Login Failed",
-      description: error.message || "Something went wrong",
-      variant: "destructive",
-    });
-  } finally {
-    setIsLoading(false);
-  }
-};
+      if (!response.ok || data.status !== "success") {
+        throw new Error(data.message || "Invalid credentials");
+      }
+
+      const { token, userId, fullName, userName } = data.body;
+
+      login({ token, userId, fullName, userName });
+
+      toast({
+        title: `Welcome ${userName} 👋`,
+        description: "Login successful",
+      });
+
+      navigate("/dashboard");
+   } catch (error) {
+  const errorMessage = error instanceof Error ? error.message : "Something went wrong";
+  toast({
+    title: "Login Failed",
+    description: errorMessage,
+    variant: "destructive",
+  });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSendOTP = async () => {
     if (!forgotEmail) {
@@ -123,7 +118,7 @@ localStorage.setItem("userName", userName);
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Network Error",
         description: "Something went wrong. Try again later.",
@@ -164,7 +159,6 @@ localStorage.setItem("userName", userName);
           description: "You can now log in with your new password",
         });
 
-        // Redirect to login state
         setShowResetDialog(false);
         setForgotEmail("");
         setOtp("");
@@ -176,7 +170,7 @@ localStorage.setItem("userName", userName);
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Something went wrong",
@@ -277,7 +271,6 @@ localStorage.setItem("userName", userName);
                 </DialogContent>
               </Dialog>
 
-              {/* Step 2: Reset Password */}
               {showResetDialog && (
                 <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
                   <DialogContent className="sm:max-w-md">
