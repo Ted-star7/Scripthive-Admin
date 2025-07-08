@@ -59,12 +59,13 @@ export function DashboardHeader() {
       }
 
       navigate("/profile", { state: { profile: data.body } });
-    } catch (error: any) {
-      toast({
-        title: "Error fetching profile",
-        description: error.message,
-        variant: "destructive",
-      });
+    } catch (error) {
+  const errorMessage = error instanceof Error ? error.message : "Something went wrong";
+  toast({
+    title: "Login Failed",
+    description: errorMessage,
+    variant: "destructive",
+  });
     }
   };
 

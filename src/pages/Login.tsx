@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Copy, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -22,19 +22,44 @@ import {
 } from "@/components/ui/dialog";
 
 const Login = () => {
+  // Form state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [forgotEmail, setForgotEmail] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSendingOTP, setIsSendingOTP] = useState(false);
-  const [isResettingPassword, setIsResettingPassword] = useState(false);
-  const [showResetDialog, setShowResetDialog] = useState(false);
+  const [loginDetails, setLoginDetails] = useState<{
+    token: string;
+    userId: number;
+    fullName: string;
+    userName: string;
+    email: string;
+  } | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  // Password reset state
+  const [forgotEmail, setForgotEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [showResetDialog, setShowResetDialog] = useState(false);
+  const [isSendingOTP, setIsSendingOTP] = useState(false);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
+
+  // Hooks
   const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const copyToClipboard = (text: string, e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleShowPassword = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    setShowPassword(!showPassword);
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,11 +76,14 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch("https://onlinewriting.onrender.com/api/open/users/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+      const response = await fetch(
+        "https://onlinewriting.onrender.com/api/open/users/login",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        }
+      );
 
       const data = await response.json();
 
@@ -63,23 +91,33 @@ const Login = () => {
         throw new Error(data.message || "Invalid credentials");
       }
 
-      const { token, userId, fullName, userName } = data.body;
+      const { token, userId, fullName, userName, email: userEmail } = data.body;
+      const userData = { token, userId, fullName, userName, email: userEmail };
+      
+      // Store all user data including email
+      setLoginDetails(userData);
+      login(userData);
 
-      login({ token, userId, fullName, userName });
+      // Store in localStorage for DashboardHeader access
+      localStorage.setItem("token", token);
+      localStorage.setItem("userId", userId);
+      localStorage.setItem("fullName", fullName);
+      localStorage.setItem("userName", userName);
+      localStorage.setItem("email", userEmail);
 
       toast({
         title: `Welcome ${userName} 👋`,
         description: "Login successful",
       });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Something went wrong";
 
-      navigate("/dashboard");
-   } catch (error) {
-  const errorMessage = error instanceof Error ? error.message : "Something went wrong";
-  toast({
-    title: "Login Failed",
-    description: errorMessage,
-    variant: "destructive",
-  });
+      toast({
+        title: "Login Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -97,11 +135,14 @@ const Login = () => {
 
     setIsSendingOTP(true);
     try {
-      const response = await fetch("https://onlinewriting.onrender.com/api/open/users/forgot-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: forgotEmail }),
-      });
+      const response = await fetch(
+        "https://onlinewriting.onrender.com/api/open/users/forgot-password",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: forgotEmail }),
+        }
+      );
 
       const data = await response.json();
 
@@ -112,16 +153,15 @@ const Login = () => {
         });
         setShowResetDialog(true);
       } else {
-        toast({
-          title: "Error",
-          description: data.message || "Failed to send OTP",
-          variant: "destructive",
-        });
+        throw new Error(data.message || "Failed to send OTP");
       }
-    } catch {
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to send OTP";
+
       toast({
-        title: "Network Error",
-        description: "Something went wrong. Try again later.",
+        title: "Error",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -141,15 +181,18 @@ const Login = () => {
 
     setIsResettingPassword(true);
     try {
-      const response = await fetch("https://onlinewriting.onrender.com/api/open/users/reset-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: forgotEmail,
-          otp: otp,
-          newPassword: newPassword,
-        }),
-      });
+      const response = await fetch(
+        "https://onlinewriting.onrender.com/api/open/users/reset-password",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: forgotEmail,
+            otp,
+            newPassword,
+          }),
+        }
+      );
 
       const data = await response.json();
 
@@ -158,27 +201,29 @@ const Login = () => {
           title: "Password Reset Successful",
           description: "You can now log in with your new password",
         });
-
         setShowResetDialog(false);
         setForgotEmail("");
         setOtp("");
         setNewPassword("");
       } else {
-        toast({
-          title: "Reset Failed",
-          description: data.message || "Failed to reset password",
-          variant: "destructive",
-        });
+        throw new Error(data.message || "Failed to reset password");
       }
-    } catch {
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to reset password";
+
       toast({
         title: "Error",
-        description: "Something went wrong",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
       setIsResettingPassword(false);
     }
+  };
+
+  const proceedToDashboard = () => {
+    navigate("/dashboard");
   };
 
   return (
@@ -202,108 +247,166 @@ const Login = () => {
           </CardHeader>
 
           <CardContent className="space-y-6">
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="admin@scripthive.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading}
-              >
-                {isLoading ? "Signing In..." : "Sign In"}
-              </Button>
-            </form>
-
-            {/* Forgot Password Trigger + Dialogs */}
-            <div className="text-center">
-              <Dialog>
-                <DialogTrigger asChild>
-                  <button className="text-scripthive-gold hover:text-scripthive-gold-dark font-medium transition-colors">
-                    Forgot Password?
-                  </button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Reset Your Password</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <Label htmlFor="forgotEmail">Email</Label>
+            {!loginDetails ? (
+              <>
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email Address</Label>
                     <Input
-                      id="forgotEmail"
+                      id="email"
                       type="email"
-                      placeholder="you@example.com"
-                      value={forgotEmail}
-                      onChange={(e) => setForgotEmail(e.target.value)}
+                      placeholder="admin@scripthive.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      autoComplete="username"
                     />
-                    <Button onClick={handleSendOTP} disabled={isSendingOTP}>
-                      {isSendingOTP ? "Sending OTP..." : "Send OTP"}
-                    </Button>
                   </div>
-                </DialogContent>
-              </Dialog>
 
-              {showResetDialog && (
-                <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
-                  <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>Enter OTP & New Password</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <Label>OTP Code</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Password</Label>
+                    <div className="relative">
                       <Input
-                        placeholder="123456"
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value)}
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Enter your password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        autoComplete="current-password"
                       />
-                      <Label>New Password</Label>
+                      <button
+                        type="button"
+                        onClick={handleShowPassword}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                      >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? "Signing In..." : "Sign In"}
+                  </Button>
+                </form>
+
+                <div className="text-center">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <button className="text-scripthive-gold hover:text-scripthive-gold-dark font-medium transition-colors">
+                        Forgot Password?
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Reset Your Password</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <Label htmlFor="forgotEmail">Email</Label>
+                        <Input
+                          id="forgotEmail"
+                          type="email"
+                          placeholder="you@example.com"
+                          value={forgotEmail}
+                          onChange={(e) => setForgotEmail(e.target.value)}
+                          autoComplete="email"
+                        />
+                        <Button onClick={handleSendOTP} disabled={isSendingOTP}>
+                          {isSendingOTP ? "Sending OTP..." : "Send OTP"}
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </>
+            ) : (
+              <div className="space-y-4">
+                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                  <h3 className="font-medium text-green-800">Login Successful!</h3>
+                  <p className="text-sm text-green-600 mt-1">
+                    Here are your authentication details:
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <Label>User ID</Label>
+                    <div className="flex items-center gap-2">
                       <Input
-                        type="password"
-                        placeholder="Enter new password"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
+                        value={loginDetails.userId.toString()}
+                        readOnly
+                        className="font-mono"
                       />
-                      <Button onClick={handleResetPassword} disabled={isResettingPassword}>
-                        {isResettingPassword ? "Resetting..." : "Reset Password"}
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={(e) => copyToClipboard(loginDetails.userId.toString(), e)}
+                      >
+                        {copied ? <Check size={16} /> : <Copy size={16} />}
                       </Button>
                     </div>
-                  </DialogContent>
-                </Dialog>
-              )}
-            </div>
+                  </div>
+
+                  <div>
+                    <Label>Username</Label>
+                    <Input
+                      value={loginDetails.userName}
+                      readOnly
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Full Name</Label>
+                    <Input
+                      value={loginDetails.fullName}
+                      readOnly
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Email</Label>
+                    <Input
+                      value={loginDetails.email}
+                      readOnly
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Access Token</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={loginDetails.token}
+                        readOnly
+                        className="font-mono text-xs"
+                      />
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={(e) => copyToClipboard(loginDetails.token, e)}
+                      >
+                        {copied ? <Check size={16} /> : <Copy size={16} />}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      This token is used for authenticated requests
+                    </p>
+                  </div>
+                </div>
+
+                <Button
+                  className="w-full mt-4"
+                  onClick={proceedToDashboard}
+                >
+                  Proceed to Dashboard
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
         <div className="text-center mt-8 text-scripthive-gray-dark">
-          <p className="text-sm">© 2024 ScriptHive. All rights reserved.</p>
+          <p className="text-sm">
+            © {new Date().getFullYear()} ScriptHive. All rights reserved.
+          </p>
         </div>
       </div>
     </div>

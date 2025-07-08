@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthProvider";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -8,24 +9,16 @@ import { DashboardCharts } from "@/components/DashboardCharts";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [isAuthChecked, setIsAuthChecked] = useState(false);
-  const [fullName, setFullName] = useState("");
+  const { user } = useAuth();
 
   useEffect(() => {
-    const token = localStorage.getItem("token"); // ✅ Use localStorage
-    const name = localStorage.getItem("fullName");
-
-    if (!token) {
-      navigate("/login");
-    } else {
-      setFullName(name || "Admin");
+    if (!user) {
+      navigate("/");
     }
+  }, [user, navigate]);
 
-    setIsAuthChecked(true);
-  }, [navigate]);
-
-  if (!isAuthChecked) {
-    return null; // Prevents flash while checking auth
+  if (!user) {
+    return null; // Or a loading spinner
   }
 
   return (
@@ -37,7 +30,7 @@ const Dashboard = () => {
           <main className="flex-1 p-6 space-y-6 overflow-auto">
             <div className="animate-fade-in">
               <h1 className="text-3xl font-bold text-scripthive-black mb-2">
-                Welcome, {fullName}
+                Welcome, {user.fullName || "Admin"}
               </h1>
               <p className="text-scripthive-gray-dark">
                 Here's what's happening with ScriptHive today.

@@ -32,7 +32,7 @@ const User = () => {
     };
 
     fetchUsers();
-  }, []);
+  }, [toast] );
 
   return (
     <div className="min-h-screen bg-scripthive-gray-light p-6">
