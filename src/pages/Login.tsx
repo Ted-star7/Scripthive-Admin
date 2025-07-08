@@ -49,7 +49,10 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const copyToClipboard = (text: string, e: React.MouseEvent<HTMLButtonElement>) => {
+  const copyToClipboard = (
+    text: string,
+    e: React.MouseEvent<HTMLButtonElement>
+  ) => {
     e.preventDefault();
     navigator.clipboard.writeText(text);
     setCopied(true);
@@ -93,12 +96,11 @@ const Login = () => {
 
       const { token, userId, fullName, userName, email: userEmail } = data.body;
       const userData = { token, userId, fullName, userName, email: userEmail };
-      
+
       // Store all user data including email
       setLoginDetails(userData);
       login(userData);
 
-      // Store in localStorage for DashboardHeader access
       localStorage.setItem("token", token);
       localStorage.setItem("userId", userId);
       localStorage.setItem("fullName", fullName);
@@ -277,9 +279,15 @@ const Login = () => {
                         type="button"
                         onClick={handleShowPassword}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
-                        aria-label={showPassword ? "Hide password" : "Show password"}
+                        aria-label={
+                          showPassword ? "Hide password" : "Show password"
+                        }
                       >
-                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        {showPassword ? (
+                          <EyeOff size={18} />
+                        ) : (
+                          <Eye size={18} />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -321,7 +329,9 @@ const Login = () => {
             ) : (
               <div className="space-y-4">
                 <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                  <h3 className="font-medium text-green-800">Login Successful!</h3>
+                  <h3 className="font-medium text-green-800">
+                    Login Successful!
+                  </h3>
                   <p className="text-sm text-green-600 mt-1">
                     Here are your authentication details:
                   </p>
@@ -339,7 +349,9 @@ const Login = () => {
                       <Button
                         size="icon"
                         variant="outline"
-                        onClick={(e) => copyToClipboard(loginDetails.userId.toString(), e)}
+                        onClick={(e) =>
+                          copyToClipboard(loginDetails.userId.toString(), e)
+                        }
                       >
                         {copied ? <Check size={16} /> : <Copy size={16} />}
                       </Button>
@@ -348,26 +360,17 @@ const Login = () => {
 
                   <div>
                     <Label>Username</Label>
-                    <Input
-                      value={loginDetails.userName}
-                      readOnly
-                    />
+                    <Input value={loginDetails.userName} readOnly />
                   </div>
 
                   <div>
                     <Label>Full Name</Label>
-                    <Input
-                      value={loginDetails.fullName}
-                      readOnly
-                    />
+                    <Input value={loginDetails.fullName} readOnly />
                   </div>
 
                   <div>
                     <Label>Email</Label>
-                    <Input
-                      value={loginDetails.email}
-                      readOnly
-                    />
+                    <Input value={loginDetails.email} readOnly />
                   </div>
 
                   <div>
@@ -392,10 +395,7 @@ const Login = () => {
                   </div>
                 </div>
 
-                <Button
-                  className="w-full mt-4"
-                  onClick={proceedToDashboard}
-                >
+                <Button className="w-full mt-4" onClick={proceedToDashboard}>
                   Proceed to Dashboard
                 </Button>
               </div>

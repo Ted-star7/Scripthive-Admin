@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 type User = {
   token: string;
-  userId: number;
+  userId: string;
   fullName: string;
   userName: string;
 } | null;
@@ -18,44 +18,33 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User>(null);
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("user");
-    
-    try {
-      if (savedUser) {
-        const parsed = JSON.parse(savedUser);
-        if (parsed?.token) {
-          setUser(parsed);
-        } else {
-          localStorage.removeItem("user");
-        }
-      }
-    } catch (error) {
-      console.error("Failed to parse user data", error);
-      localStorage.removeItem("user");
-    } finally {
-      setLoading(false);
+    const token = localStorage.getItem("token");
+    const userId = localStorage.getItem("userId");
+    const fullName = localStorage.getItem("fullName");
+    const userName = localStorage.getItem("userName");
+
+    if (token && userId) {
+      setUser({ token, userId, fullName: fullName || "", userName: userName || "" });
     }
   }, []);
 
   const login = (userData: NonNullable<User>) => {
+    localStorage.setItem("token", userData.token);
+    localStorage.setItem("userId", userData.userId);
+    localStorage.setItem("fullName", userData.fullName);
+    localStorage.setItem("userName", userData.userName);
     setUser(userData);
-    localStorage.setItem("user", JSON.stringify(userData));
-    navigate("/dashboard");
+    navigate("/dashboard"); // Redirect to dashboard after login
   };
 
   const logout = () => {
+    localStorage.clear();
     setUser(null);
-    localStorage.removeItem("user");
-    navigate("/");
+    navigate("/"); // Redirect to login after logout
   };
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>
