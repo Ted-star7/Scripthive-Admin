@@ -94,23 +94,37 @@ const Login = () => {
         throw new Error(data.message || "Invalid credentials");
       }
 
-      const { token, userId, fullName, userName, email: userEmail } = data.body;
-      const userData = { token, userId, fullName, userName, email: userEmail };
+      const sessionData = {
+        message: data.message,
+        status: data.status,
+        body: {
+          token: data.body.token,
+          userId: data.body.userId,
+          fullName: data.body.fullName,
+          userName: data.body.userName,
+          active: data.body.active,
+          email: email, // added to match User type
+        },
+      };
 
-      // Store all user data including email
-      setLoginDetails(userData);
-      login(userData);
+      login(sessionData.body);
 
-      localStorage.setItem("token", token);
-      localStorage.setItem("userId", userId);
-      localStorage.setItem("fullName", fullName);
-      localStorage.setItem("userName", userName);
-      localStorage.setItem("email", userEmail);
+      setLoginDetails({
+        token: sessionData.body.token,
+        userId: sessionData.body.userId,
+        fullName: sessionData.body.fullName,
+        userName: sessionData.body.userName,
+        email: sessionData.body.email,
+      });
+
+      localStorage.setItem("session", JSON.stringify(sessionData));
 
       toast({
-        title: `Welcome ${userName} 👋`,
-        description: "Login successful",
+        title: `Welcome ${sessionData.body.userName} 👋`,
+        description: sessionData.message,
       });
+
+      navigate("/dashboard");
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Something went wrong";
@@ -283,11 +297,7 @@ const Login = () => {
                           showPassword ? "Hide password" : "Show password"
                         }
                       >
-                        {showPassword ? (
-                          <EyeOff size={18} />
-                        ) : (
-                          <Eye size={18} />
-                        )}
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
                     </div>
                   </div>
@@ -384,7 +394,9 @@ const Login = () => {
                       <Button
                         size="icon"
                         variant="outline"
-                        onClick={(e) => copyToClipboard(loginDetails.token, e)}
+                        onClick={(e) =>
+                          copyToClipboard(loginDetails.token, e)
+                        }
                       >
                         {copied ? <Check size={16} /> : <Copy size={16} />}
                       </Button>

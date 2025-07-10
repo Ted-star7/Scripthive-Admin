@@ -10,6 +10,8 @@ import PostedScripts from "@/pages/PostedScripts";
 import UserProfile from "@/pages/UserProfile";
 import NotFound from "@/pages/NotFound";
 import Payment from "@/pages/Payment";
+import RegistrationLimits from "@/pages/RegistrationLimits";
+
 import { useAuth } from "@/context/AuthProvider";
 
 const queryClient = new QueryClient();
@@ -28,6 +30,8 @@ const AppRoutes = () => {
       ) : (
         <>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/registration-limits" element={<RegistrationLimits />} />
+
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/scripts" element={<PostedScripts />} />
           <Route path="/users" element={<User />} />

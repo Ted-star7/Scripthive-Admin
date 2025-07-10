@@ -1,19 +1,56 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+
+interface ProfileData {
+  fullName: string;
+  userName: string;
+  email: string;
+  role: string;
+}
 
 const UserProfile = () => {
   const navigate = useNavigate();
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const { toast } = useToast();
 
-  const fullName = localStorage.getItem("fullName") || "Admin";
-  const userName = localStorage.getItem("userName") || "admin";
-  const userId = localStorage.getItem("userId");
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+
+  const session = localStorage.getItem("session");
+  const userId = session ? JSON.parse(session).body.userId : null;
 
   useEffect(() => {
-    const fetchProfilePictureUrl = async () => {
-      if (!userId) return;
+    if (!userId) {
+      toast({
+        title: "Error",
+        description: "User ID not found in session",
+        variant: "destructive",
+      });
+      return;
+    }
 
+    const fetchProfileDetails = async () => {
+      try {
+        const res = await fetch(`https://onlinewriting.onrender.com/api/open/users/${userId}`);
+        const data = await res.json();
+
+        if (!res.ok || data.status !== "success") {
+          throw new Error(data.message || "Failed to fetch profile");
+        }
+
+        const { fullName, userName, email, role } = data.body;
+        setProfile({ fullName, userName, email, role });
+      } catch (err) {
+        toast({
+          title: "Failed to load profile",
+          description: err instanceof Error ? err.message : "Unknown error",
+          variant: "destructive",
+        });
+      }
+    };
+
+    const fetchProfilePictureUrl = async () => {
       try {
         const res = await fetch(
           `https://onlinewriting.onrender.com/api/open/users/${userId}/profile-picture`
@@ -21,18 +58,25 @@ const UserProfile = () => {
         const data = await res.json();
 
         if (res.ok && data.status === "success" && data.body) {
-          setImageUrl(data.body); // API returns the image link in `body`
-        } else {
-          throw new Error("Failed to load image URL");
+          setImageUrl(data.body);
         }
       } catch (err) {
         console.error("Error loading profile picture:", err);
-        setImageUrl(null); // fallback to default
+        setImageUrl(null); // fallback
       }
     };
 
+    fetchProfileDetails();
     fetchProfilePictureUrl();
-  }, [userId]);
+  }, [userId, toast]);
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-gray-500">
+        Loading profile...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-scripthive-gray-light flex flex-col">
@@ -61,15 +105,17 @@ const UserProfile = () => {
 
           {/* Info */}
           <div className="space-y-2">
-            <h2 className="text-xl font-bold">{fullName}</h2>
-            <p className="text-sm text-scripthive-gray-dark">@{userName}</p>
+            <h2 className="text-xl font-bold">{profile.fullName}</h2>
+            <p className="text-sm text-scripthive-gray-dark">@{profile.userName}</p>
           </div>
 
           {/* Details */}
           <div className="text-left space-y-4">
             <h3 className="text-lg font-semibold">Account Information</h3>
-            <p><strong>Full Name:</strong> {fullName}</p>
-            <p><strong>Username:</strong> {userName}</p>
+            <p><strong>Full Name:</strong> {profile.fullName}</p>
+            <p><strong>Username:</strong> {profile.userName}</p>
+            <p><strong>Email:</strong> {profile.email}</p>
+            <p><strong>Role:</strong> {profile.role || "N/A"}</p>
           </div>
         </div>
       </main>

@@ -1,3 +1,4 @@
+// src/pages/Dashboard.tsx
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthProvider";
@@ -9,16 +10,20 @@ import { DashboardCharts } from "@/components/DashboardCharts";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
-    if (!user) {
+    if (!loading && !user) {
       navigate("/");
     }
-  }, [user, navigate]);
+  }, [user, loading, navigate]);
+
+  if (loading) {
+    return <div className="p-6">Loading...</div>; // Optional: spinner here
+  }
 
   if (!user) {
-    return null; // Or a loading spinner
+    return null;
   }
 
   return (

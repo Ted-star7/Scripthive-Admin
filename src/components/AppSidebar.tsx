@@ -16,13 +16,16 @@ import {
   FileText,
   CreditCard,
   Settings,
+  ShieldCheck, // ✅ Added icon for Registration Limit
 } from "lucide-react";
 
+// ✅ Updated menuItems array
 const menuItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Manage Users", url: "/users", icon: Users },
   { title: "Posted Scripts", url: "/scripts", icon: FileText },
   { title: "Payments", url: "/payments", icon: CreditCard },
+  { title: "Limit Registrations", url: "/registration-limits", icon: ShieldCheck }, // ✅ New item
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 
@@ -40,7 +43,7 @@ export function AppSidebar() {
           <div className="flex items-center space-x-3">
             <div className="flex-shrink-0">
               <img
-                src="/Logo.png" // ✅ Use your local logo
+                src="/Logo.png"
                 alt="ScriptHive Logo"
                 className={`transition-all duration-300 ${
                   isCollapsed ? "w-10 h-10" : "w-12 h-12"

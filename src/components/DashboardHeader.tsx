@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bell, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -18,53 +19,80 @@ import { useAuth } from "@/context/AuthProvider";
 export function DashboardHeader() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { logout } = useAuth();
 
-  // ✅ Get session data
-  const fullName = localStorage.getItem("fullName") || "Admin User";
-  const userName = localStorage.getItem("userName") || "admin";
-  // const email = localStorage.getItem("email") || `${userName}@scripthive.com`;
+  const [fullName, setFullName] = useState("Admin");
+  const [userName, setUserName] = useState("admin");
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
 
-  // ✅ Generate initials
-  const getInitials = (name: string) =>
-    name
-      .split(" ")
-      .map((part) => part.charAt(0).toUpperCase())
-      .join("")
-      .slice(0, 2);
+  const session = localStorage.getItem("session");
+  const userId = session ? JSON.parse(session).body.userId : null;
 
-  const initials = getInitials(fullName);
+  useEffect(() => {
+    if (!userId) return;
 
- const { logout } = useAuth(); 
+    const fetchProfile = async () => {
+      try {
+        const response = await fetch(`https://onlinewriting.onrender.com/api/open/users/${userId}`);
+        const data = await response.json();
 
-const handleLogout = () => {
-  toast({
-    title: "Logging out...",
-    description: "We’re signing you out. Please wait.",
-    duration: 2000,
-  });
+        if (response.ok && data.status === "success") {
+          setFullName(data.body.fullName);
+          setUserName(data.body.userName);
+        } else {
+          throw new Error("Failed to fetch profile");
+        }
+      } catch (err) {
+        console.error("Profile fetch error:", err);
+      }
+    };
 
-  setTimeout(() => {
-    logout(); 
-    navigate("/login", { replace: true });
-  }, 1500);
-};
+    const fetchProfilePicture = async () => {
+      try {
+        const response = await fetch(
+          `https://onlinewriting.onrender.com/api/open/users/${userId}/profile-picture`
+        );
+        const data = await response.json();
 
+        if (response.ok && data.status === "success" && data.body) {
+          setImageUrl(data.body);
+        }
+      } catch (err) {
+        console.error("Profile picture fetch error:", err);
+      }
+    };
 
+    fetchProfile();
+    fetchProfilePicture();
+  }, [userId]);
+
+  const handleLogout = () => {
+    toast({
+      title: "Logging out...",
+      description: "We’re signing you out. Please wait.",
+      duration: 2000,
+    });
+
+    setTimeout(() => {
+      logout();
+      navigate("/login", { replace: true });
+    }, 1500);
+  };
 
   const handleProfile = async () => {
-    const userId = localStorage.getItem("userId");
-
     if (!userId) {
       toast({
         title: "Error",
-        description: "User ID not found in session",
+        description: "User ID not found",
         variant: "destructive",
       });
       return;
     }
 
     try {
-      const response = await fetch(`https://onlinewriting.onrender.com/api/open/users/${userId}`);
+      const response = await fetch(
+        `https://onlinewriting.onrender.com/api/open/users/${userId}`
+      );
       const data = await response.json();
 
       if (!response.ok || data.status !== "success") {
@@ -73,14 +101,23 @@ const handleLogout = () => {
 
       navigate("/profile", { state: { profile: data.body } });
     } catch (error) {
-  const errorMessage = error instanceof Error ? error.message : "Something went wrong";
-  toast({
-    title: "Login Failed",
-    description: errorMessage,
-    variant: "destructive",
-  });
+      const errorMessage =
+        error instanceof Error ? error.message : "Something went wrong";
+      toast({
+        title: "Profile Fetch Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
     }
   };
+
+  const getInitials = (name: string) =>
+    name
+      .split(" ")
+      .map((part) => part[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase();
 
   return (
     <header className="border-b border-scripthive-gray-dark/10 bg-white px-6 py-4">
@@ -115,8 +152,13 @@ const handleLogout = () => {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center space-x-2 hover:bg-scripthive-gold/10">
                 <Avatar className="w-8 h-8">
+                  <AvatarImage
+                    src={imageUrl || "/default-avatar.png"}
+                    alt={fullName}
+                    className="object-cover"
+                  />
                   <AvatarFallback className="bg-scripthive-gold text-scripthive-black font-semibold">
-                    {initials}
+                    {getInitials(fullName)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="hidden md:block text-left">
