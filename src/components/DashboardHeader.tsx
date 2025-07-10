@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Bell, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthProvider";
 
 export function DashboardHeader() {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ export function DashboardHeader() {
   // ✅ Get session data
   const fullName = localStorage.getItem("fullName") || "Admin User";
   const userName = localStorage.getItem("userName") || "admin";
-  const email = localStorage.getItem("email") || `${userName}@scripthive.com`;
+  // const email = localStorage.getItem("email") || `${userName}@scripthive.com`;
 
   // ✅ Generate initials
   const getInitials = (name: string) =>
@@ -33,10 +34,22 @@ export function DashboardHeader() {
 
   const initials = getInitials(fullName);
 
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate("/login");
-  };
+ const { logout } = useAuth(); 
+
+const handleLogout = () => {
+  toast({
+    title: "Logging out...",
+    description: "We’re signing you out. Please wait.",
+    duration: 2000,
+  });
+
+  setTimeout(() => {
+    logout(); 
+    navigate("/login", { replace: true });
+  }, 1500);
+};
+
+
 
   const handleProfile = async () => {
     const userId = localStorage.getItem("userId");
@@ -108,7 +121,7 @@ export function DashboardHeader() {
                 </Avatar>
                 <div className="hidden md:block text-left">
                   <p className="text-sm font-medium text-scripthive-black">{fullName}</p>
-                  <p className="text-xs text-scripthive-gray-dark">{email}</p>
+                  <p className="text-xs text-scripthive-gray-dark">{userName}</p>
                 </div>
               </Button>
             </DropdownMenuTrigger>

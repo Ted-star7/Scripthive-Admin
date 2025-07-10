@@ -14,21 +14,18 @@ import { useAuth } from "@/context/AuthProvider";
 
 const queryClient = new QueryClient();
 
-
 const AppRoutes = () => {
   const { user } = useAuth();
 
   return (
     <Routes>
-      {/* Public routes */}
       {!user ? (
         <>
           <Route path="/" element={<Login />} />
           <Route path="/login" element={<Login />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<NotFound />} />
         </>
       ) : (
-        /* Protected routes */
         <>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
@@ -42,6 +39,7 @@ const AppRoutes = () => {
     </Routes>
   );
 };
+
 
 const App = () => {
   return (
