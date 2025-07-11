@@ -12,6 +12,7 @@ import NotFound from "@/pages/NotFound";
 import Payment from "@/pages/Payment";
 import RegistrationLimits from "@/pages/RegistrationLimits";
 
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/AuthProvider";
 
 const queryClient = new QueryClient();
@@ -19,31 +20,32 @@ const queryClient = new QueryClient();
 const AppRoutes = () => {
   const { user } = useAuth();
 
-  return (
-    <Routes>
-      {!user ? (
-        <>
-          <Route path="/" element={<Login />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="*" element={<NotFound />} />
-        </>
-      ) : (
-        <>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/registration-limits" element={<RegistrationLimits />} />
+  if (!user) {
+    return (
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    );
+  }
 
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/scripts" element={<PostedScripts />} />
-          <Route path="/users" element={<User />} />
-          <Route path="/payments" element={<Payment />} />
-          <Route path="/profile" element={<UserProfile />} />
-          <Route path="*" element={<NotFound />} />
-        </>
-      )}
-    </Routes>
+  // Authenticated routes wrapped in SidebarProvider
+  return (
+    <SidebarProvider>
+      <Routes>
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/users" element={<User />} />
+        <Route path="/scripts" element={<PostedScripts />} />
+        <Route path="/payments" element={<Payment />} />
+        <Route path="/profile" element={<UserProfile />} />
+        <Route path="/registration-limits" element={<RegistrationLimits />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </SidebarProvider>
   );
 };
-
 
 const App = () => {
   return (

@@ -5,9 +5,11 @@ import { useToast } from "@/hooks/use-toast";
 
 interface ProfileData {
   fullName: string;
-  userName: string;
+  username: string;
   email: string;
   role: string;
+  password: string;
+  phone: string;
 }
 
 const UserProfile = () => {
@@ -16,6 +18,16 @@ const UserProfile = () => {
 
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [editMode, setEditMode] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [formData, setFormData] = useState<ProfileData>({
+    fullName: "",
+    username: "",
+    email: "",
+    role: "",
+    password: "changeme123",
+    phone: "",
+  });
 
   const session = localStorage.getItem("session");
   const userId = session ? JSON.parse(session).body.userId : null;
@@ -39,8 +51,19 @@ const UserProfile = () => {
           throw new Error(data.message || "Failed to fetch profile");
         }
 
-        const { fullName, userName, email, role } = data.body;
-        setProfile({ fullName, userName, email, role });
+        const { fullName, username, email, role, phone } = data.body;
+
+        const userProfile: ProfileData = {
+          fullName,
+          username,
+          email,
+          role,
+          password: "changeme123",
+          phone: phone || "",
+        };
+
+        setProfile(userProfile);
+        setFormData(userProfile);
       } catch (err) {
         toast({
           title: "Failed to load profile",
@@ -62,13 +85,82 @@ const UserProfile = () => {
         }
       } catch (err) {
         console.error("Error loading profile picture:", err);
-        setImageUrl(null); // fallback
+        setImageUrl(null);
       }
     };
 
     fetchProfileDetails();
     fetchProfilePictureUrl();
   }, [userId, toast]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+    }
+  };
+
+  const handleUploadPicture = async () => {
+    if (!selectedFile || !userId) return;
+
+    const form = new FormData();
+    form.append("file", selectedFile);
+
+    try {
+      const res = await fetch(
+        `https://onlinewriting.onrender.com/api/open/users/${userId}/profile-picture`,
+        {
+          method: "POST",
+          body: form,
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok || data.status !== "success") {
+        throw new Error(data.message || "Upload failed");
+      }
+
+      setImageUrl(data.body);
+      setSelectedFile(null);
+      toast({ title: "Success", description: "Profile picture uploaded successfully" });
+    } catch (err) {
+      toast({
+        title: "Upload failed",
+        description: err instanceof Error ? err.message : "Unknown error",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      const res = await fetch(`https://onlinewriting.onrender.com/api/open/users/${userId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || data.status !== "success") {
+        throw new Error(data.message || "Failed to update profile");
+      }
+
+      setProfile(formData);
+      setEditMode(false);
+      toast({ title: "Success", description: "Profile updated successfully" });
+    } catch (err) {
+      toast({
+        title: "Update failed",
+        description: err instanceof Error ? err.message : "Unknown error",
+        variant: "destructive",
+      });
+    }
+  };
 
   if (!profile) {
     return (
@@ -82,40 +174,145 @@ const UserProfile = () => {
     <div className="min-h-screen bg-scripthive-gray-light flex flex-col">
       {/* Header */}
       <div className="bg-white px-6 py-4 shadow-sm flex justify-between items-center border-b border-scripthive-gray-dark/10">
-        <h1 className="text-2xl font-bold text-scripthive-black">Admin Profile</h1>
-        <Button
-          className="bg-scripthive-gold hover:bg-scripthive-gold-dark text-scripthive-black font-medium"
-          onClick={() => navigate("/dashboard")}
-        >
-          ← Back to Dashboard
-        </Button>
+        <div className="text-left">
+          <h1 className="text-3xl font-extrabold text-scripthive-gold tracking-tight drop-shadow-sm">
+            Admin Profile
+          </h1>
+          <p className="text-scripthive-black text-sm mt-1">
+            View and manage your account details below
+          </p>
+          <div className="mt-2 w-20 h-1 bg-scripthive-gold rounded-full"></div>
+        </div>
+        <div className="space-x-2">
+          {editMode ? (
+            <>
+              <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700">
+                Save
+              </Button>
+              <Button
+                onClick={() => {
+                  setEditMode(false);
+                  if (profile) setFormData(profile);
+                }}
+                className="bg-red-500 hover:bg-red-600"
+              >
+                Cancel
+              </Button>
+            </>
+          ) : (
+            <Button
+              onClick={() => setEditMode(true)}
+              className="bg-scripthive-gold hover:bg-scripthive-gold-dark text-scripthive-black"
+            >
+              Edit Profile
+            </Button>
+          )}
+          <Button
+            className="bg-gray-300 hover:bg-gray-400 text-black"
+            onClick={() => navigate("/dashboard")}
+          >
+            ← Back to Dashboard
+          </Button>
+        </div>
       </div>
 
       {/* Content */}
       <main className="flex-1 flex justify-center items-center p-8 animate-fade-in">
         <div className="w-full max-w-2xl bg-white/90 backdrop-blur-sm rounded-xl p-8 shadow-xl border border-gray-200 text-scripthive-black text-center space-y-6">
           {/* Profile Picture */}
-          <div className="flex justify-center">
+          <div className="flex flex-col items-center gap-2">
             <img
               src={imageUrl || "/default-avatar.png"}
               alt="Profile"
               className="w-28 h-28 rounded-full object-cover border-2 border-scripthive-gold"
             />
+
+            {editMode && (
+              <>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="text-sm"
+                />
+                <Button
+                  onClick={handleUploadPicture}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded"
+                >
+                  Upload Picture
+                </Button>
+              </>
+            )}
           </div>
 
-          {/* Info */}
-          <div className="space-y-2">
-            <h2 className="text-xl font-bold">{profile.fullName}</h2>
-            <p className="text-sm text-scripthive-gray-dark">@{profile.userName}</p>
-          </div>
+          {/* Enhanced Editable Info */}
+          <div className="text-left space-y-6">
+            <h3 className="text-xl font-semibold text-scripthive-black border-b pb-2 border-scripthive-gold">
+              Account Information
+            </h3>
 
-          {/* Details */}
-          <div className="text-left space-y-4">
-            <h3 className="text-lg font-semibold">Account Information</h3>
-            <p><strong>Full Name:</strong> {profile.fullName}</p>
-            <p><strong>Username:</strong> {profile.userName}</p>
-            <p><strong>Email:</strong> {profile.email}</p>
-            <p><strong>Role:</strong> {profile.role || "N/A"}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-1">
+                <label className="block text-sm font-semibold">Full Name</label>
+                {editMode ? (
+                  <input
+                    name="fullName"
+                    value={formData.fullName}
+                    onChange={handleChange}
+                    className="border border-gray-300 focus:border-scripthive-gold focus:ring-2 focus:ring-scripthive-gold/30 transition px-3 py-2 w-full rounded-md text-sm"
+                  />
+                ) : (
+                  <p className="text-sm">{profile.fullName}</p>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-sm font-semibold">Username</label>
+                {editMode ? (
+                  <input
+                    name="username"
+                    value={formData.username}
+                    onChange={handleChange}
+                    className="border border-gray-300 focus:border-scripthive-gold focus:ring-2 focus:ring-scripthive-gold/30 transition px-3 py-2 w-full rounded-md text-sm"
+                  />
+                ) : (
+                  <p className="text-sm">{profile.username}</p>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-sm font-semibold">Email</label>
+                {editMode ? (
+                  <input
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="border border-gray-300 focus:border-scripthive-gold focus:ring-2 focus:ring-scripthive-gold/30 transition px-3 py-2 w-full rounded-md text-sm"
+                  />
+                ) : (
+                  <p className="text-sm">{profile.email}</p>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-sm font-semibold">Phone</label>
+                {editMode ? (
+                  <input
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    className="border border-gray-300 focus:border-scripthive-gold focus:ring-2 focus:ring-scripthive-gold/30 transition px-3 py-2 w-full rounded-md text-sm"
+                  />
+                ) : (
+                  <p className="text-sm">{profile.phone}</p>
+                )}
+              </div>
+
+              <div className="space-y-1 col-span-1 md:col-span-2">
+                <label className="block text-sm font-semibold">Role</label>
+                <p className="text-sm">{profile.role}</p>
+              </div>
+            </div>
           </div>
         </div>
       </main>

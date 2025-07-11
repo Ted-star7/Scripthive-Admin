@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { AppSidebar } from "@/components/AppSidebar";
 import { useToast } from "@/hooks/use-toast";
 import { Pencil, Trash2 } from "lucide-react";
 
@@ -21,7 +22,6 @@ const RegistrationLimits = () => {
   const [limits, setLimits] = useState<Limit[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  // ✅ Fetch registration limits on load
   useEffect(() => {
     const fetchLimits = async () => {
       try {
@@ -111,7 +111,6 @@ const RegistrationLimits = () => {
     }
   };
 
-  // ✅ Real DELETE implementation
   const handleDelete = async (id: string) => {
     try {
       const response = await fetch(`${API_URL}/${id}`, {
@@ -134,107 +133,115 @@ const RegistrationLimits = () => {
     }
   };
 
-    function handleEdit(limit: Limit): void {
-        throw new Error("Function not implemented.");
-    }
+  const handleEdit = (limit: Limit) => {
+    setRole(limit.role);
+    setAmount(limit.amount);
+    setEditingId(limit.id);
+  };
 
   return (
-    <div className="min-h-screen bg-scripthive-gray-light px-8 py-10">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-scripthive-black mb-2">
-          Registration Fee Settings
-        </h1>
-        <p className="text-scripthive-gray-dark mb-8">
-          Manage and set registration amounts by role.
-        </p>
+    <div className="flex min-h-screen w-full">
+      {/* Sidebar */}
+      <AppSidebar />
 
-        {/* Form */}
-        <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6 md:p-8 mb-10">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div>
-              <label className="block mb-2 text-sm font-medium text-scripthive-black">Role</label>
-              <select
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-scripthive-gold"
-              >
-                <option value="">Select Role</option>
-                <option value="writer">Writer</option>
-                <option value="employer">Employer</option>
-              </select>
-            </div>
+      {/* Main Content */}
+      <div className="flex-1 bg-scripthive-gray-light px-8 py-10 overflow-auto">
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-3xl font-bold text-scripthive-black mb-2">
+            Registration Fee Settings
+          </h1>
+          <p className="text-scripthive-gray-dark mb-8">
+            Manage and set registration amounts by role.
+          </p>
 
-            <div>
-              <label className="block mb-2 text-sm font-medium text-scripthive-black">
-                Amount (KES)
-              </label>
-              <Input
-                type="number"
-                placeholder="e.g. 100"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-              />
-            </div>
+          {/* Form */}
+          <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6 md:p-8 mb-10">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <div>
+                <label className="block mb-2 text-sm font-medium text-scripthive-black">Role</label>
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-scripthive-gold"
+                >
+                  <option value="">Select Role</option>
+                  <option value="writer">Writer</option>
+                  <option value="employer">Employer</option>
+                </select>
+              </div>
 
-            <div className="flex items-end">
-              <Button
-                className="w-full bg-scripthive-gold text-scripthive-black hover:bg-scripthive-gold-dark"
-                onClick={handleSubmit}
-              >
-                {editingId ? "Update Limit" : "Add Limit"}
-              </Button>
+              <div>
+                <label className="block mb-2 text-sm font-medium text-scripthive-black">
+                  Amount (KES)
+                </label>
+                <Input
+                  type="number"
+                  placeholder="e.g. 100"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                />
+              </div>
+
+              <div className="flex items-end">
+                <Button
+                  className="w-full bg-scripthive-gold text-scripthive-black hover:bg-scripthive-gold-dark"
+                  onClick={handleSubmit}
+                >
+                  {editingId ? "Update Limit" : "Add Limit"}
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Table */}
-        <div className="bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden">
-          <table className="min-w-full text-sm">
-            <thead className="bg-scripthive-black text-white">
-              <tr>
-                <th className="text-left py-4 px-6">Role</th>
-                <th className="text-left py-4 px-6">Amount</th>
-                <th className="text-right py-4 px-6">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {limits.length === 0 ? (
+          {/* Table */}
+          <div className="bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden">
+            <table className="min-w-full text-sm">
+              <thead className="bg-scripthive-black text-white">
                 <tr>
-                  <td colSpan={3} className="text-center py-6 text-scripthive-gray-dark">
-                    No registration limits set yet.
-                  </td>
+                  <th className="text-left py-4 px-6">Role</th>
+                  <th className="text-left py-4 px-6">Amount</th>
+                  <th className="text-right py-4 px-6">Actions</th>
                 </tr>
-              ) : (
-                limits.map((limit) => (
-                  <tr
-                    key={limit.id}
-                    className="border-t border-gray-100 hover:bg-scripthive-gray-light/40 transition"
-                  >
-                    <td className="py-4 px-6 capitalize">{limit.role}</td>
-                    <td className="py-4 px-6">{limit.amount}</td>
-                    <td className="py-4 px-6 text-right space-x-3">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-scripthive-gold"
-                        onClick={() => handleEdit(limit)}
-                      >
-                        <Pencil size={16} />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-red-500"
-                        onClick={() => handleDelete(limit.id)}
-                      >
-                        <Trash2 size={16} />
-                      </Button>
+              </thead>
+              <tbody>
+                {limits.length === 0 ? (
+                  <tr>
+                    <td colSpan={3} className="text-center py-6 text-scripthive-gray-dark">
+                      No registration limits set yet.
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  limits.map((limit) => (
+                    <tr
+                      key={limit.id}
+                      className="border-t border-gray-100 hover:bg-scripthive-gray-light/40 transition"
+                    >
+                      <td className="py-4 px-6 capitalize">{limit.role}</td>
+                      <td className="py-4 px-6">{limit.amount}</td>
+                      <td className="py-4 px-6 text-right space-x-3">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-scripthive-gold"
+                          onClick={() => handleEdit(limit)}
+                        >
+                          <Pencil size={16} />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-red-500"
+                          onClick={() => handleDelete(limit.id)}
+                        >
+                          <Trash2 size={16} />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
