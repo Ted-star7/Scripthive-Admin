@@ -1,24 +1,16 @@
 {
   "routes": [
     {
-      "handle": "filesystem"
-    },
-    {
       "src": "/static/(.*)",
       "headers": {
         "Cache-Control": "public, max-age=31536000, immutable"
-      },
-      "continue": true
+      }
     },
     {
       "src": "/(.*)",
-      "dest": "/index.html",
-      "status": 200
+      "dest": "/index.html"
     }
   ],
   "cleanUrls": true,
-  "trailingSlash": false,
-  "errorPages": {
-    "404": "/index.html"
-  }
+  "trailingSlash": false
 }
