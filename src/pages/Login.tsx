@@ -43,8 +43,6 @@ const Login = () => {
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [isSendingOTP, setIsSendingOTP] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
-
-  // Hooks
   const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
