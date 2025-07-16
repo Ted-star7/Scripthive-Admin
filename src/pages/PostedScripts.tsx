@@ -3,7 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
 
+<<<<<<< HEAD
 import { AppSidebar } from "@/components/AppSidebar"; // 👈 Make sure path is correct
+=======
+>>>>>>> 23692dc67546f8b26da127fec07ec7cd21ee94be
 
 interface Project {
   id: string;
