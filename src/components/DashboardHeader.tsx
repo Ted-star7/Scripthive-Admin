@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Bell, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -23,7 +23,6 @@ export function DashboardHeader() {
 
   const [fullName, setFullName] = useState("Admin");
   const [userName, setUserName] = useState("admin");
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   const session = localStorage.getItem("session");
   const userId = session ? JSON.parse(session).body.userId : null;
@@ -47,29 +46,13 @@ export function DashboardHeader() {
       }
     };
 
-    const fetchProfilePicture = async () => {
-      try {
-        const response = await fetch(
-          `https://onlinewriting.onrender.com/api/open/users/${userId}/profile-picture`
-        );
-        const data = await response.json();
-
-        if (response.ok && data.status === "success" && data.body) {
-          setImageUrl(data.body);
-        }
-      } catch (err) {
-        console.error("Profile picture fetch error:", err);
-      }
-    };
-
     fetchProfile();
-    fetchProfilePicture();
   }, [userId]);
 
   const handleLogout = () => {
     toast({
       title: "Logging out...",
-      description: "We’re signing you out. Please wait.",
+      description: "We're signing you out. Please wait.",
       duration: 2000,
     });
 
@@ -152,11 +135,6 @@ export function DashboardHeader() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center space-x-2 hover:bg-scripthive-gold/10">
                 <Avatar className="w-8 h-8">
-                  <AvatarImage
-                    src={imageUrl || "/default-avatar.png"}
-                    alt={fullName}
-                    className="object-cover"
-                  />
                   <AvatarFallback className="bg-scripthive-gold text-scripthive-black font-semibold">
                     {getInitials(fullName)}
                   </AvatarFallback>

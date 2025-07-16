@@ -1,37 +1,45 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { componentTagger } from "lovable-tagger";
-export default defineConfig(({ mode }) => ({
-  base: '/', // Add this line
+
+export default defineConfig({
+  base: './',
+  plugins: [
+    react(),
+    // Add the HTML plugin rewrite for development
+    {
+      name: 'rewrite-all-to-index',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          if (!req.url?.startsWith('/@') && !req.url?.includes('.')) {
+            req.url = '/index.html';
+          }
+          next();
+        });
+      }
+    }
+  ],
   server: {
     host: true,
     port: 8080,
     strictPort: true,
     open: '/login',
   },
-
-  plugins: [
-    react(),
-    mode === 'development' && componentTagger(),
-  ].filter(Boolean),
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-      // Add explicit file extensions for directories
-      "@/components/ui": path.resolve(__dirname, "./src/components/ui/index.ts"),
-    },
-  },
   build: {
-    chunkSizeWarningLimit: 1000,
+    outDir: 'dist',
+    assetsDir: 'assets',
+    emptyOutDir: true,
     rollupOptions: {
       output: {
-        manualChunks: {
-          react: ['react', 'react-dom', 'react-router-dom'],
-          ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
-          // Remove shadcn from manualChunks since we're handling it via alias
-        },
+        assetFileNames: 'assets/[name]-[hash][extname]',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
       },
     },
   },
-}));
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
+});

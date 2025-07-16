@@ -1,33 +1,35 @@
-import { useNavigate, useLocation } from "react-router-dom";
-import { useEffect } from "react";
-import { useAuth } from "@/context/AuthProvider";
+import { useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '@/context/AuthProvider';
 
-const NotFound = () => {
+export default function NotFound() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
 
   useEffect(() => {
-    console.error(
-      "404 Error: User attempted to access non-existent route:",
-      location.pathname
-    );
-  }, [location.pathname]);
+    // Log the 404 error
+    console.error(`404 at ${location.pathname}`);
+    
+    // Redirect to login if not authenticated
+    if (!user) {
+      navigate('/login', { replace: true });
+    } else {
+      // Optionally redirect to dashboard if authenticated
+      navigate('/dashboard', { replace: true });
+    }
+  }, [navigate, user, location]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">404</h1>
-        <p className="text-xl text-gray-600 mb-4">Oops! Page not found</p>
-        <button
-          onClick={() => navigate(user ? '/dashboard' : '/login')}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          Go to {user ? 'Dashboard' : 'Login'}
-        </button>
-      </div>
+    <div className="flex flex-col items-center justify-center h-screen">
+      <h1 className="text-4xl font-bold mb-4">404 - Page Not Found</h1>
+      <p className="text-lg mb-6">The page you're looking for doesn't exist.</p>
+      <button 
+        onClick={() => navigate(user ? '/dashboard' : '/login')}
+        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+      >
+        Go to {user ? 'Dashboard' : 'Login'}
+      </button>
     </div>
   );
-};
-
-export default NotFound;
+}

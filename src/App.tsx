@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
@@ -13,36 +13,49 @@ import Payment from "@/pages/Payment";
 import RegistrationLimits from "@/pages/RegistrationLimits";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/AuthProvider";
+import { useEffect } from "react";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: false,
+    },
+  },
+});
 
-// SINGLE AppRoutes component (remove any duplicates)
 const AppRoutes = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  const location = useLocation();
 
-  if (!user) {
-    return (
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    );
+  useEffect(() => {
+    if (!loading && !user && location.pathname !== '/login') {
+      window.location.href = '/login';
+    }
+  }, [user, loading, location]);
+
+  if (loading) {
+    return <div>Loading...</div>;
   }
 
   return (
-    <SidebarProvider>
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/users" element={<User />} />
-        <Route path="/scripts" element={<PostedScripts />} />
-        <Route path="/payments" element={<Payment />} />
-        <Route path="/profile" element={<UserProfile />} />
-        <Route path="/registration-limits" element={<RegistrationLimits />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </SidebarProvider>
+    <Routes>
+      <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} replace />} />
+      <Route path="/login" element={<Login />} />
+      
+      {user ? (
+        <>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/users" element={<User />} />
+          <Route path="/scripts" element={<PostedScripts />} />
+          <Route path="/payments" element={<Payment />} />
+          <Route path="/profile" element={<UserProfile />} />
+          <Route path="/registration-limits" element={<RegistrationLimits />} />
+        </>
+      ) : null}
+      
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 };
 
@@ -52,7 +65,9 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <AppRoutes />
+        <SidebarProvider>
+          <AppRoutes />
+        </SidebarProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

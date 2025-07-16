@@ -17,10 +17,8 @@ const UserProfile = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [editMode, setEditMode] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [formData, setFormData] = useState<ProfileData>({
     fullName: "",
     username: "",
@@ -74,67 +72,11 @@ const UserProfile = () => {
       }
     };
 
-    const fetchProfilePictureUrl = async () => {
-      try {
-        const res = await fetch(
-          `https://onlinewriting.onrender.com/api/open/users/${userId}/profile-picture`
-        );
-        const data = await res.json();
-
-        if (res.ok && data.status === "success" && data.body) {
-          setImageUrl(data.body);
-        }
-      } catch (err) {
-        console.error("Error loading profile picture:", err);
-        setImageUrl(null);
-      }
-    };
-
     fetchProfileDetails();
-    fetchProfilePictureUrl();
   }, [userId, toast]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
-    }
-  };
-
-  const handleUploadPicture = async () => {
-    if (!selectedFile || !userId) return;
-
-    const form = new FormData();
-    form.append("file", selectedFile);
-
-    try {
-      const res = await fetch(
-        `https://onlinewriting.onrender.com/api/open/users/${userId}/profile-picture`,
-        {
-          method: "POST",
-          body: form,
-        }
-      );
-
-      const data = await res.json();
-
-      if (!res.ok || data.status !== "success") {
-        throw new Error(data.message || "Upload failed");
-      }
-
-      setImageUrl(data.body);
-      setSelectedFile(null);
-      toast({ title: "Success", description: "Profile picture uploaded successfully" });
-    } catch (err) {
-      toast({
-        title: "Upload failed",
-        description: err instanceof Error ? err.message : "Unknown error",
-        variant: "destructive",
-      });
-    }
   };
 
   const handleSave = async () => {
@@ -220,31 +162,6 @@ const UserProfile = () => {
       {/* Content */}
       <main className="flex-1 w-full flex justify-center items-center p-6 animate-fade-in">
         <div className="w-full max-w-2xl bg-white/90 backdrop-blur-sm rounded-xl p-8 shadow-xl border border-gray-200 text-scripthive-black space-y-6">
-          {/* Profile Picture */}
-          <div className="flex flex-col items-center gap-2">
-            <img
-              src={imageUrl || "/default-avatar.png"}
-              alt="Profile"
-              className="w-28 h-28 rounded-full object-cover border-2 border-scripthive-gold"
-            />
-            {editMode && (
-              <>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="text-sm"
-                />
-                <Button
-                  onClick={handleUploadPicture}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded"
-                >
-                  Upload Picture
-                </Button>
-              </>
-            )}
-          </div>
-
           {/* Editable Info */}
           <div className="text-left space-y-6">
             <h3 className="text-xl font-semibold border-b pb-2 border-scripthive-gold">
