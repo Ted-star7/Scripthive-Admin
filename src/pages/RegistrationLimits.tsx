@@ -46,7 +46,7 @@ const RegistrationLimits = () => {
     };
 
     fetchLimits();
-  }, []);
+  }, [toast]);
 
   const handleSubmit = async () => {
     if (!role || !amount) {
