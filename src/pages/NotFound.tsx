@@ -1,18 +1,15 @@
+import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
 
 const NotFound = () => {
-  const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    console.error("404: Route not found:", location.pathname);
-
-    if (location.pathname.startsWith("/dashboard")) {
-      // Redirect to dashboard if refresh fails
-      navigate("/dashboard", { replace: true });
-    }
-  }, [location, navigate]);
+    console.error(
+      "404 Error: User attempted to access non-existent route:",
+      location.pathname
+    );
+  }, [location.pathname]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">

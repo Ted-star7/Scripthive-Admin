@@ -7,62 +7,36 @@ import { AppSidebar } from "@/components/AppSidebar";
 interface Payment {
   phoneNumber: string;
   amount: number;
-  userId: number;
-  merchantRequestId: string;
-  checkoutRequestId: string;
-  mpesaReceiptNumber: string;
-  resultCode: number;
-  resultDesc: string;
+  mpesaReceiptNumber: string | null;
   status: string;
+  resultDesc: string;
+  transactionDate: string | null;
+  merchantRequestId: string | null;
+  checkoutRequestId: string | null;
 }
-
-const mockPayments: Payment[] = [
-  {
-    phoneNumber: "254718794130",
-    amount: 1,
-    userId: 1,
-    merchantRequestId: "25fe-4f8a-9a66-d5cbb202bfb477235",
-    checkoutRequestId: "ws_CO_06072025142621119718794130",
-    mpesaReceiptNumber: "TG64UGNJUG",
-    resultCode: 0,
-    resultDesc: "The service request is processed successfully.",
-    status: "Success",
-  },
-  {
-    phoneNumber: "254712345678",
-    amount: 100,
-    userId: 2,
-    merchantRequestId: "merchant-123",
-    checkoutRequestId: "checkout-456",
-    mpesaReceiptNumber: "MPESA123ABC",
-    resultCode: 0,
-    resultDesc: "Waiting for customer input.",
-    status: "Pending",
-  },
-  {
-    phoneNumber: "254798765432",
-    amount: 250,
-    userId: 3,
-    merchantRequestId: "merchant-789",
-    checkoutRequestId: "checkout-987",
-    mpesaReceiptNumber: "MPESA789XYZ",
-    resultCode: 1,
-    resultDesc: "Transaction failed due to timeout.",
-    status: "Failed",
-  },
-];
 
 const Payment = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      setPayments(mockPayments);
-      setLoading(false);
-    }, 1000);
+    const fetchPayments = async () => {
+      try {
+        const response = await fetch("https://onlinewriting.onrender.com/api/open/transactions");
+        if (!response.ok) {
+          throw new Error("Failed to fetch transactions");
+        }
+        const result = await response.json();
+        setPayments(result.data || []);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    return () => clearTimeout(timeout);
+    fetchPayments();
   }, []);
 
   const getStatusColor = (status: string) => {
@@ -98,6 +72,8 @@ const Payment = () => {
           <div className="flex justify-center items-center py-20">
             <Loader2 className="animate-spin text-scripthive-gold" size={32} />
           </div>
+        ) : error ? (
+          <div className="text-red-600 text-center py-10">Error: {error}</div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {payments.map((payment, index) => (
@@ -114,9 +90,8 @@ const Payment = () => {
                 <CardContent className="text-sm text-scripthive-black space-y-2">
                   <p><strong>Phone:</strong> {payment.phoneNumber}</p>
                   <p><strong>Amount:</strong> KES {payment.amount}</p>
-                  <p><strong>User ID:</strong> {payment.userId}</p>
-                  <p><strong>Checkout ID:</strong> {payment.checkoutRequestId}</p>
-                  <p><strong>Merchant ID:</strong> {payment.merchantRequestId}</p>
+                  <p><strong>Checkout ID:</strong> {payment.checkoutRequestId || "N/A"}</p>
+                  <p><strong>Merchant ID:</strong> {payment.merchantRequestId || "N/A"}</p>
                   <p className="italic text-scripthive-gray-dark">{payment.resultDesc}</p>
                 </CardContent>
               </Card>

@@ -171,11 +171,11 @@ const UserProfile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-scripthive-gray-light flex flex-col">
+    <div className="min-h-screen bg-scripthive-gray-light flex flex-col items-center">
       {/* Header */}
-      <div className="bg-white px-6 py-4 shadow-sm flex justify-between items-center border-b border-scripthive-gray-dark/10">
-        <div className="text-left">
-          <h1 className="text-3xl font-extrabold text-scripthive-gold tracking-tight drop-shadow-sm">
+      <div className="w-full max-w-6xl bg-white px-6 py-4 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-scripthive-gray-dark/10">
+        <div>
+          <h1 className="text-3xl font-extrabold text-scripthive-gold tracking-tight">
             Admin Profile
           </h1>
           <p className="text-scripthive-black text-sm mt-1">
@@ -183,7 +183,7 @@ const UserProfile = () => {
           </p>
           <div className="mt-2 w-20 h-1 bg-scripthive-gold rounded-full"></div>
         </div>
-        <div className="space-x-2">
+        <div className="flex gap-2 mt-4 sm:mt-0">
           {editMode ? (
             <>
               <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700">
@@ -217,8 +217,8 @@ const UserProfile = () => {
       </div>
 
       {/* Content */}
-      <main className="flex-1 flex justify-center items-center p-8 animate-fade-in">
-        <div className="w-full max-w-2xl bg-white/90 backdrop-blur-sm rounded-xl p-8 shadow-xl border border-gray-200 text-scripthive-black text-center space-y-6">
+      <main className="flex-1 w-full flex justify-center items-center p-6 animate-fade-in">
+        <div className="w-full max-w-2xl bg-white/90 backdrop-blur-sm rounded-xl p-8 shadow-xl border border-gray-200 text-scripthive-black space-y-6">
           {/* Profile Picture */}
           <div className="flex flex-col items-center gap-2">
             <img
@@ -226,7 +226,6 @@ const UserProfile = () => {
               alt="Profile"
               className="w-28 h-28 rounded-full object-cover border-2 border-scripthive-gold"
             />
-
             {editMode && (
               <>
                 <input
@@ -245,69 +244,32 @@ const UserProfile = () => {
             )}
           </div>
 
-          {/* Enhanced Editable Info */}
+          {/* Editable Info */}
           <div className="text-left space-y-6">
-            <h3 className="text-xl font-semibold text-scripthive-black border-b pb-2 border-scripthive-gold">
+            <h3 className="text-xl font-semibold border-b pb-2 border-scripthive-gold">
               Account Information
             </h3>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-1">
-                <label className="block text-sm font-semibold">Full Name</label>
-                {editMode ? (
-                  <input
-                    name="fullName"
-                    value={formData.fullName}
-                    onChange={handleChange}
-                    className="border border-gray-300 focus:border-scripthive-gold focus:ring-2 focus:ring-scripthive-gold/30 transition px-3 py-2 w-full rounded-md text-sm"
-                  />
-                ) : (
-                  <p className="text-sm">{profile.fullName}</p>
-                )}
-              </div>
-
-              <div className="space-y-1">
-                <label className="block text-sm font-semibold">Username</label>
-                {editMode ? (
-                  <input
-                    name="username"
-                    value={formData.username}
-                    onChange={handleChange}
-                    className="border border-gray-300 focus:border-scripthive-gold focus:ring-2 focus:ring-scripthive-gold/30 transition px-3 py-2 w-full rounded-md text-sm"
-                  />
-                ) : (
-                  <p className="text-sm">{profile.username}</p>
-                )}
-              </div>
-
-              <div className="space-y-1">
-                <label className="block text-sm font-semibold">Email</label>
-                {editMode ? (
-                  <input
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="border border-gray-300 focus:border-scripthive-gold focus:ring-2 focus:ring-scripthive-gold/30 transition px-3 py-2 w-full rounded-md text-sm"
-                  />
-                ) : (
-                  <p className="text-sm">{profile.email}</p>
-                )}
-              </div>
-
-              <div className="space-y-1">
-                <label className="block text-sm font-semibold">Phone</label>
-                {editMode ? (
-                  <input
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    className="border border-gray-300 focus:border-scripthive-gold focus:ring-2 focus:ring-scripthive-gold/30 transition px-3 py-2 w-full rounded-md text-sm"
-                  />
-                ) : (
-                  <p className="text-sm">{profile.phone}</p>
-                )}
-              </div>
-
+              {[
+                { label: "Full Name", name: "fullName" },
+                { label: "Username", name: "username" },
+                { label: "Email", name: "email" },
+                { label: "Phone", name: "phone" },
+              ].map(({ label, name }) => (
+                <div key={name} className="space-y-1">
+                  <label className="block text-sm font-semibold">{label}</label>
+                  {editMode ? (
+                    <input
+                      name={name}
+                      value={(formData as any)[name]}
+                      onChange={handleChange}
+                      className="border border-gray-300 focus:border-scripthive-gold focus:ring-2 focus:ring-scripthive-gold/30 transition px-3 py-2 w-full rounded-md text-sm"
+                    />
+                  ) : (
+                    <p className="text-sm">{(profile as any)[name]}</p>
+                  )}
+                </div>
+              ))}
               <div className="space-y-1 col-span-1 md:col-span-2">
                 <label className="block text-sm font-semibold">Role</label>
                 <p className="text-sm">{profile.role}</p>
