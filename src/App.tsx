@@ -16,6 +16,7 @@ import { useAuth } from "@/context/AuthProvider";
 
 const queryClient = new QueryClient();
 
+// SINGLE AppRoutes component (remove any duplicates)
 const AppRoutes = () => {
   const { user } = useAuth();
 

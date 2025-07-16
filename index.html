@@ -2,32 +2,62 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>ScriptHive Admin Portal</title>
-    <link rel="icon" type="image/png" href="/Logo.png" />
+    
+    <!-- Favicon with fallbacks -->
+    <link rel="icon" type="image/png" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style" />
+    
+    <!-- Inter Font -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" />
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#ffffff" />
+    
+    <!-- SEO Meta -->
     <meta name="description" content="ScriptHive Admin Portal - Manage your script marketplace" />
-
-    <!-- Inter Font from Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-
+    <meta name="keywords" content="ScriptHive,Admin,Script,Marketplace" />
+    
+    <!-- OpenGraph -->
     <meta property="og:title" content="ScriptHive Admin Portal" />
     <meta property="og:description" content="Manage your script marketplace with powerful admin tools" />
     <meta property="og:type" content="website" />
-    <!-- You can add your own image here if needed -->
-    <!-- <meta property="og:image" content="your-image-url.png" /> -->
-
+    <meta property="og:url" content="https://admin.scripthive.com" />
+    <!-- <meta property="og:image" content="/social-preview.png" /> -->
+    <meta property="og:site_name" content="ScriptHive" />
+    
+    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@scripthive" />
-    <!-- <meta name="twitter:image" content="your-twitter-image.png" /> -->
+    <meta name="twitter:creator" content="@scripthive" />
+    <!-- <meta name="twitter:image" content="/twitter-preview.png" /> -->
+    
+    <!-- PWA Manifest -->
+    
   </head>
 
   <body>
+    <noscript>
+      <strong>We're sorry but ScriptHive Admin doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+    </noscript>
     <div id="root"></div>
+    
+    <!-- Preload your main entry point -->
+    <link rel="modulepreload" href="/src/main.tsx" />
+    
+    <!-- Fallback for older browsers -->
+    <script>
+      if (!window.Promise) {
+        document.write('<script src="/polyfills.js"><\/script>');
+      }
+    </script>
+    
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
