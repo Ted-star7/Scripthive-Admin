@@ -34,7 +34,7 @@ const AppRoutes = () => {
   return (
     <SidebarProvider>
       <Routes>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/users" element={<User />} />
         <Route path="/scripts" element={<PostedScripts />} />
