@@ -4,7 +4,6 @@ import './index.css';
 import { AuthProvider } from '@/context/AuthProvider';
 import { BrowserRouter } from 'react-router-dom';
 
-
 if (window.location.hash) {
   window.history.replaceState(null, '', window.location.pathname);
 }
