@@ -11,7 +11,6 @@ import UserProfile from "@/pages/UserProfile";
 import NotFound from "@/pages/NotFound";
 import Payment from "@/pages/Payment";
 import RegistrationLimits from "@/pages/RegistrationLimits";
-
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/AuthProvider";
 
