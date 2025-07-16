@@ -5,7 +5,7 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  base: process.env.VITE_BASE_PATH || "/Script", // Base path should be at the top level
+  base: process.env.VITE_BASE_PATH || "/Script/",  
 
   server: {
     host: "::",
